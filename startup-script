@@ -1,0 +1,104 @@
+#!/bin/bash
+# github.com/thonixx
+# do whatever you want to do with this tiny script
+
+# configure to your needs
+SERVERNAME="minecraft"
+SERVERPATH="/var/minecraft/firstserver"
+JARFILE="craftbukkit.jar" # script is designed for craftbukkit (see line 44 for the option --nojline) you would have to remove it for vanilla server
+RAMPARAM="1024M" # general java settings
+CPU_COUNT="4" # general java settings
+ 
+# check for packages
+if [ -z "$(screen -v)" ]
+then
+	echo "Screen is not installed but needed."
+
+	# exit with failure
+	exit 1
+fi
+
+procs=$(screen -list | grep -i $SERVERNAME | wc -l)
+COMMAND="$1"
+
+if [ "$COMMAND" == "start" ]
+then
+	# start the minecraft server
+	if [ "$procs" -gt 0 ]
+	then
+		# server already running
+		echo "Server seems to run already."
+		echo "Please stop it first."
+		echo ""
+		echo "Debug output (screen sessions):"
+		echo ""
+		screen -list | grep -i $SERVERNAME
+		
+		# exit with failure
+		exit 1
+	else
+		# start server
+		echo "Server is starting"
+		echo ""
+		screen -dmS $SERVERNAME sh -c "java -Xmx$RAMPARAM -Xms$RAMPARAM -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVERPATH/$JARFILE --nojline"
+		# give time to start process
+		sleep 2
+		
+		if [ "$(screen -list | grep -i $SERVERNAME | wc -l)" -gt 0 ]
+		then
+			echo "Server start succeeded."
+
+			# exit with success
+			exit 0
+		else
+			echo "Server start failed."
+			echo "Check your settings."
+
+			# exit with failure
+			exit 1
+		fi
+	fi
+elif [ "$COMMAND" == "stop" ]
+then
+	# stop the minecraft server
+	if [ "$procs" -gt 0 ]
+	then
+		# server running
+		echo "Server will be stopped in"
+		# issue say command
+		screen -S $SERVERNAME -p 0 -X stuff "say Server will be stopped in$(printf \\r)"
+		# count down from 10
+		COUNT=11 ; for s in `seq 1 10` ; do sleep 1 ; let COUNT=COUNT-1 ; screen -S $SERVERNAME -p 0 -X stuff "say $COUNT $(printf \\r)" ; echo "$COUNT" ; done
+		# stop the server
+		screen -S $SERVERNAME -p 0 -X stuff "stop$(printf \\r)"
+		# give time to end process
+		sleep 2
+		
+		if [ "$(screen -list | grep -i $SERVERNAME | wc -l)" == 0 ]
+		then
+			echo "Server stopped successfully."
+			
+			# exit with success
+			exit 0
+		else
+			echo "Server still seems to run?"
+			echo ""
+			echo "Debug output (screen sessions):"
+			echo ""
+			screen -list | grep -i $SERVERNAME
+			
+			# exit with failure
+			exit 1
+		fi
+	else
+		# server does not run
+		echo "Server is not running."
+		
+		# exit with failure
+		exit 1
+	fi
+fi
+
+# script would echo this if command not found in the ifs above
+echo "This is no known command. Issue start or stop."
+exit 1
