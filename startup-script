@@ -40,7 +40,7 @@ then
 		# start server
 		echo "Server is starting"
 		echo ""
-		screen -dmS $SERVERNAME sh -c "java -Xmx$RAMPARAM -Xms$RAMPARAM -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVERPATH/$JARFILE --nojline"
+		screen -dmS $SERVERNAME sh -c "cd $SERVERPATH && java -Xmx$RAMPARAM -Xms$RAMPARAM -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVERPATH/$JARFILE --nojline"
 		# give time to start process
 		sleep 2
 		
