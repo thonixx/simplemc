@@ -71,8 +71,9 @@ then
 		COUNT=11 ; for s in `seq 1 10` ; do sleep 1 ; let COUNT=COUNT-1 ; screen -S $SERVERNAME -p 0 -X stuff "say $COUNT $(printf \\r)" ; echo "$COUNT" ; done
 		# stop the server
 		screen -S $SERVERNAME -p 0 -X stuff "stop$(printf \\r)"
+		echo "Stopping in progress.."
 		# give time to end process
-		sleep 2
+		sleep 5
 		
 		if [ "$(screen -list | grep -i $SERVERNAME | wc -l)" == 0 ]
 		then
