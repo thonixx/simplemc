@@ -4,13 +4,13 @@
 
 # configure to your needs
 SERVERNAME="minecraft"
-SERVERPATH="/var/minecraft/firstserver"
+SERVERPATH="/var/minecraft/servername"
 JARFILE="craftbukkit.jar" # script is designed for craftbukkit (see line 44 for the option --nojline) you would have to remove it for vanilla server
 RAMPARAM="1024M" # general java settings
 CPU_COUNT="4" # general java settings
  
 # check for packages
-if [ -z "$(screen -v)" ]
+if [ -z "$(which screen)" ]
 then
 	echo "Screen is not installed but needed."
 
@@ -20,6 +20,7 @@ fi
 
 procs=$(screen -list | grep -i $SERVERNAME | wc -l)
 COMMAND="$1"
+ARGUMENT="$2"
 
 if [ "$COMMAND" == "start" ]
 then
@@ -98,6 +99,25 @@ then
 		# exit with failure
 		exit 1
 	fi
+elif [ "$COMMAND" == "cmd" ]
+then
+	# issue every command you give as parameter
+        if [ "$procs" -gt 0 ]
+        then
+		# server is running
+		echo "Issuing command \"$ARGUMENT\""
+		# issue any command
+		screen -S $SERVERNAME -p 0 -X stuff "$ARGUMENT$(printf \\r)"
+
+		# exit with success
+		exit 0
+        else
+                # server does not run
+                echo "Server is not running."
+
+                # exit with failure
+                exit 1
+        fi
 fi
 
 # script would echo this if command not found in the ifs above
