@@ -4,9 +4,9 @@
 
 # configure to your needs
 SERVERNAME="minecraft"
-SERVERPATH="/var/minecraft/servername"
+SERVERPATH="/var/minecraft/server"
 JARFILE="craftbukkit.jar" # script is designed for craftbukkit (see line 44 for the option --nojline) you would have to remove it for vanilla server
-RAMPARAM="1024M" # general java settings
+RAMPARAM="2048M" # general java settings
 CPU_COUNT="4" # general java settings
  
 # check for packages
@@ -40,7 +40,6 @@ then
 	else
 		# start server
 		echo "Server is starting"
-		echo ""
 		screen -dmS $SERVERNAME sh -c "cd $SERVERPATH && java -Xmx$RAMPARAM -Xms$RAMPARAM -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=$CPU_COUNT -XX:+AggressiveOpts -jar $SERVERPATH/$JARFILE --nojline"
 		# give time to start process
 		sleep 2
@@ -69,7 +68,8 @@ then
 		# issue say command
 		screen -S $SERVERNAME -p 0 -X stuff "say Server will be stopped in$(printf \\r)"
 		# count down from 10
-		COUNT=11 ; for s in `seq 1 10` ; do sleep 1 ; let COUNT=COUNT-1 ; screen -S $SERVERNAME -p 0 -X stuff "say $COUNT $(printf \\r)" ; echo "$COUNT" ; done
+		sek=10 ; while [ $sek -ge 1 ] ; do echo -ne "$sek .. \r" ; screen -S $SERVERNAME -p 0 -X stuff "say $sek $(printf \\r)" ; sek=$[$sek-1] ; sleep 1 ; done
+		# COUNT=11 ; for s in `seq 1 10` ; do sleep 1 ; let COUNT=COUNT-1 ; screen -S $SERVERNAME -p 0 -X stuff "say $COUNT $(printf \\r)" ; echo "$COUNT" ; done
 		# stop the server
 		screen -S $SERVERNAME -p 0 -X stuff "stop$(printf \\r)"
 		echo "Stopping in progress.."
