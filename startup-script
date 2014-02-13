@@ -8,7 +8,7 @@ SERVERPATH="/var/minecraft/server"
 JARFILE="craftbukkit.jar" # script is designed for craftbukkit (see line 44 for the option --nojline) you would have to remove it for vanilla server
 RAMPARAM="2048M" # general java settings
 CPU_COUNT="4" # general java settings
- 
+
 # check for packages
 if [ -z "$(which screen)" ]
 then
@@ -18,7 +18,8 @@ then
 	exit 1
 fi
 
-procs=$(screen -list | grep -i $SERVERNAME | wc -l)
+scriptname="${0##*/}"
+procs=$(screen -list | grep $SERVERNAME | wc -l)
 COMMAND="$1"
 ARGUMENT="$2"
 
@@ -33,7 +34,7 @@ then
 		echo ""
 		echo "Debug output (screen sessions):"
 		echo ""
-		screen -list | grep -i $SERVERNAME
+		screen -list | grep $SERVERNAME
 		
 		# exit with failure
 		exit 1
@@ -44,7 +45,7 @@ then
 		# give time to start process
 		sleep 2
 		
-		if [ "$(screen -list | grep -i $SERVERNAME | wc -l)" -gt 0 ]
+		if [ "$(screen -list | grep $SERVERNAME | wc -l)" -gt 0 ]
 		then
 			echo "Server start succeeded."
 
@@ -73,25 +74,50 @@ then
 		# stop the server
 		screen -S $SERVERNAME -p 0 -X stuff "stop$(printf \\r)"
 		echo "Stopping in progress.."
-		# give time to end process
-		sleep 5
+
+		# define waiting time
+		waiting=30
+		i=0
+		echo -n "."
 		
-		if [ "$(screen -list | grep -i $SERVERNAME | wc -l)" == 0 ]
-		then
-			echo "Server stopped successfully."
+		# wait for exiting
+		while [ $i -lt $waiting ]
+		do
+			# print dot
+			echo -n "."
 			
-			# exit with success
-			exit 0
-		else
-			echo "Server still seems to run?"
-			echo ""
-			echo "Debug output (screen sessions):"
-			echo ""
-			screen -list | grep -i $SERVERNAME
+			# check if running or not
+			if [ "$(screen -list | grep $SERVERNAME | wc -l)" == 0 ]
+			then
+				echo "done!"
+				echo "Server stopped successfully."
+				
+				# exit with success
+				exit 0
+			elif [ $i -ge $waiting ]
+			then
+				echo "failed!"
+				echo "Server still seems to run?"
+				echo ""
+				echo "Debug output (screen sessions):"
+				echo ""
+				screen -list | grep $SERVERNAME
+				
+				# exit with failure
+				exit 1
+			fi
+
+			# raise value
+			i="$(expr $i + 1)"
 			
-			# exit with failure
-			exit 1
-		fi
+			# wait a second
+			sleep 1
+		done
+		
+		# exit with failure
+		echo "failed!"
+		echo "Error. Something weird went wrong."
+		exit 1
 	else
 		# server does not run
 		echo "Server is not running."
@@ -121,5 +147,9 @@ then
 fi
 
 # script would echo this if command not found in the ifs above
-echo "This is no known command. Issue start or stop."
+echo "This is no known command. Issue start, stop or cmd."
+echo ""
+echo "Examples:"
+echo "./$scriptname start"
+echo "./$scriptname cmd \"say hello\""
 exit 1
